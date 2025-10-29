@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hall Effect Sensor Monitor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #0f0;
+      text-align: center;
+      padding: 50px;
+    }
+    #data {
+      font-size: 2em;
+      margin-top: 20px;
+      border: 2px solid #0f0;
+      padding: 20px;
+      display: inline-block;
+      min-width: 200px;
+    }
+    button {
+      background-color: #0f0;
+      color: #111;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2em;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #6f6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hall Effect Sensor Monitor</h1>
+  <button id="connectBtn">🔌 Connect to Arduino</button>
+  <div id="data">No Data</div>
+
+  <script>
+    const connectBtn = document.getElementById('connectBtn');
+    const dataDiv = document.getElementById('data');
+
+    connectBtn.addEventListener('click', async () => {
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });
+
+        const decoder = new TextDecoderStream();
+        const inputDone = port.readable.pipeTo(decoder.writable);
+        const inputStream = decoder.readable;
+
+        const reader = inputStream.getReader();
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) {
+            dataDiv.textContent = value.trim();
+          }
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Failed to connect to serial device.');
+      }
+    });
+  </script>
+</body>
+</html>
